@@ -1,17 +1,18 @@
 from enum import Enum
 
 from htmlnode import ParentNode
-from markdown import text_to_textnodes
+from inline_markdown import text_to_textnodes
 from textnode import text_node_to_html_node, TextNode, TextType
+
 
 class BlockType(Enum):
     PARAGRAPH = "paragraph"
     HEADING = "heading"
     CODE = "code"
     QUOTE = "quote"
-    UNORDERED_LIST = "unordered_list"
-    ORDERED_LIST = "ordered_list"
-     
+    OLIST = "ordered_list"
+    ULIST = "unordered_list"
+
 
 def markdown_to_blocks(markdown):
     blocks = markdown.split("\n\n")
@@ -22,6 +23,7 @@ def markdown_to_blocks(markdown):
         block = block.strip()
         filtered_blocks.append(block)
     return filtered_blocks
+
 
 def block_to_block_type(block):
     lines = block.split("\n")
@@ -39,15 +41,16 @@ def block_to_block_type(block):
         for line in lines:
             if not line.startswith("- "):
                 return BlockType.PARAGRAPH
-        return BlockType.UNORDERED_LIST
+        return BlockType.ULIST
     if block.startswith("1. "):
         i = 1
         for line in lines:
             if not line.startswith(f"{i}. "):
                 return BlockType.PARAGRAPH
             i += 1
-        return BlockType.ORDERED_LIST
+        return BlockType.OLIST
     return BlockType.PARAGRAPH
+
 
 def markdown_to_html_node(markdown):
     blocks = markdown_to_blocks(markdown)
@@ -66,9 +69,9 @@ def block_to_html_node(block):
         return heading_to_html_node(block)
     if block_type == BlockType.CODE:
         return code_to_html_node(block)
-    if block_type == BlockType.ORDERED_LIST:
+    if block_type == BlockType.OLIST:
         return olist_to_html_node(block)
-    if block_type == BlockType.UNORDERED_LIST:
+    if block_type == BlockType.ULIST:
         return ulist_to_html_node(block)
     if block_type == BlockType.QUOTE:
         return quote_to_html_node(block)
@@ -146,13 +149,3 @@ def quote_to_html_node(block):
     children = text_to_children(content)
     return ParentNode("blockquote", children)
 
-
-def extract_title(markdown):
-    lines = markdown.split("\n")
-
-    for line in lines:
-        if line.startswith("#"):
-            line = line.strip("#")
-            return line
-        
-    raise Exception("No header found") 
